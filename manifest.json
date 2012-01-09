@@ -4,9 +4,12 @@
     "description": "Colorizing the the usernames of original commenters within a Reddit comment thread.",
     "content_scripts": [
         {
-            "matches": ["http://www.reddit.com/*"],
+            "matches": ["http://www.reddit.com/*/comments/*"],
             "css": ["styles.css"],
             "js": ["lib/jquery.js", "app.js"]
         }
-    ]
+    ],
+    "icons": {
+        "128": "/icon/128.png"
+    }
 }
