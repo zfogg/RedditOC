@@ -1,0 +1,11 @@
+{
+    "name": "RedditOC",
+    "version": "0.1.0",
+    "description": "Colorizing the the usernames of original commenters within a Reddit comment thread.",
+    "content_scripts": [
+        {
+            "matches": ["http://reddit.com/*"],
+            "css": ["styles.css"],
+            "js": ["app.js", "jquery.js"]
+        }
+}
