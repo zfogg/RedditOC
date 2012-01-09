@@ -7,6 +7,7 @@ treeBuilder = (root, brancher) ->
         branches: treeBuilder branch, brancher for branch in brancher root
     } # A branch's end is formed with the empty-list base-case.
 
+# An array of tree data structures that represent comment threads.
 buildCommentTrees = ->
     topComments = ($ ".commentarea > .sitetable > .comment")
     commentBrancher = (comment) ->
@@ -26,8 +27,6 @@ rootWithinTree = (root) ->
             recur b, acc for b in branch.branches
         acc
     recur()
-
-#commentCSS = (comment, css) -> authOfC(comment).css css
 
 addClassToAuth = (comment, classToAdd) ->
     ($ authOfC(comment)).addClass classToAdd
