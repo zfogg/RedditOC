@@ -1,41 +1,54 @@
 # Project: RedditOC
 # Author: Zach Fogg - zach.fogg@gmail.com
 
+ORIGINAL_COMMENTS =  ".commentarea > .sitetable > .comment"
+CHILDREN_COMMENTS =  ".child > .sitetable > .comment"
+
 treeBuilder = (root, brancher) ->
     {
         leaf: root,
         branches: treeBuilder branch, brancher for branch in brancher root
     } # A branch's end is formed with the empty-list base-case.
 
-# An array of tree data structures that represent comment threads.
 buildCommentTrees = ->
-    topComments = ($ ".commentarea > .sitetable > .comment")
+    originalComments = ($ ORIGINAL_COMMENTS)
     commentBrancher = (comment) ->
-        ($ comment).find(".child > .sitetable > .comment")
-    treeBuilder comment, commentBrancher for comment in topComments
+        ($ comment).find CHILDREN_COMMENTS
+    treeBuilder oc, commentBrancher for oc in originalComments
+
+# An array of leaves from the tree whose leafProp match the rootProp.
+rootWithinTree = (root, leafProp, leafSig) ->
+    rootProp = leafProp root.leaf
+    recur = (branch, acc, sigs) ->
+        branchProp = leafProp branch.leaf
+        branchSig = leafSig branch.leaf
+        if branchProp is rootProp and not sigs[branchSig]
+            sigs[branchSig] = true
+            acc.push branch.leaf
+        recur b, acc, sigs for b in branch.branches
+        acc
+    recur root, [], {}
+
+mapRootsInTrees = (f, predicate, leafProp, leafSig, trees) ->
+    rootsInTrees = (rootWithinTree t, leafProp, leafSig for t in trees)
+    f roots for roots in rootsInTrees when predicate roots
 
 authOfC = (comment) ->
-    ($ comment).children(".entry").find(".noncollapsed > .tagline > .author")
+    (($ comment).children ".entry").find ".noncollapsed > .tagline > .author"
 
-# An array of all the comments within a thread where the OC is the author.
-rootWithinTree = (root) ->
-    rootAuth = authOfC(root.leaf).html()
-    recur = (branch = root, acc = []) ->
-        if authOfC(branch.leaf).html() is rootAuth #and (acc.indexOf branch.leaf) is -1
-            acc.push branch.leaf
-        if branch.branches and branch.branches.length isnt 0
-            recur b, acc for b in branch.branches
-        acc
-    recur()
+# We will need a few tiny functions to describe what we want:
 
-addClassToAuth = (comment, classToAdd) ->
-    ($ authOfC(comment)).addClass classToAdd
+# Map Function - Adds a CSS class to those comments that satisy the predicate.
+classifyOC = (cs) -> ($ authOfC cs).addClass "OCAuthor"
 
-mapOCAuths = (f, predicate) ->
-    tree = buildCommentTrees()
-    commentsByOCAuths = (rootWithinTree b for b in tree)
-    f cByOCAuths for cByOCAuths in commentsByOCAuths when predicate cByOCAuths
+# Predicate - Comments where the original author replies in his comment thread satisfy this.
+moreThanOne = (cs) -> cs.length > 1
+
+# Property - Extracts the author's name from a comment.
+commentProp = (leaf) -> (authOfC leaf).html()
+
+# Signature - Extracts a unique piece of data from a comment.
+commentSig = (leaf) -> ($ leaf).attr "data-fullname"
 
 # Finally, color the comments of the original commenter within his comment thread.
-# Predicate: only those who have more than one comment within their thread get colorized.
-mapOCAuths ((cs) -> addClassToAuth cs, "OCAuthor"), ((cs) -> cs.length > 1)
+mapRootsInTrees classifyOC, moreThanOne, commentProp, commentSig, buildCommentTrees()

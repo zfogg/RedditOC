@@ -1,4 +1,8 @@
-var addClassToAuth, authOfC, buildCommentTrees, mapOCAuths, rootWithinTree, treeBuilder;
+var CHILDREN_COMMENTS, ORIGINAL_COMMENTS, authOfC, buildCommentTrees, classifyOC, commentProp, commentSig, mapRootsInTrees, moreThanOne, rootWithinTree, treeBuilder;
+
+ORIGINAL_COMMENTS = ".commentarea > .sitetable > .comment";
+
+CHILDREN_COMMENTS = ".child > .sitetable > .comment";
 
 treeBuilder = function(root, brancher) {
   var branch;
@@ -18,69 +22,77 @@ treeBuilder = function(root, brancher) {
 };
 
 buildCommentTrees = function() {
-  var comment, commentBrancher, topComments, _i, _len, _results;
-  topComments = $(".commentarea > .sitetable > .comment");
+  var commentBrancher, oc, originalComments, _i, _len, _results;
+  originalComments = $(ORIGINAL_COMMENTS);
   commentBrancher = function(comment) {
-    return ($(comment)).find(".child > .sitetable > .comment");
+    return ($(comment)).find(CHILDREN_COMMENTS);
   };
   _results = [];
-  for (_i = 0, _len = topComments.length; _i < _len; _i++) {
-    comment = topComments[_i];
-    _results.push(treeBuilder(comment, commentBrancher));
+  for (_i = 0, _len = originalComments.length; _i < _len; _i++) {
+    oc = originalComments[_i];
+    _results.push(treeBuilder(oc, commentBrancher));
+  }
+  return _results;
+};
+
+rootWithinTree = function(root, leafProp, leafSig) {
+  var recur, rootProp;
+  rootProp = leafProp(root.leaf);
+  recur = function(branch, acc, sigs) {
+    var b, branchProp, branchSig, _i, _len, _ref;
+    branchProp = leafProp(branch.leaf);
+    branchSig = leafSig(branch.leaf);
+    if (branchProp === rootProp && !sigs[branchSig]) {
+      sigs[branchSig] = true;
+      acc.push(branch.leaf);
+    }
+    _ref = branch.branches;
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      b = _ref[_i];
+      recur(b, acc, sigs);
+    }
+    return acc;
+  };
+  return recur(root, [], {});
+};
+
+mapRootsInTrees = function(f, predicate, leafProp, leafSig, trees) {
+  var roots, rootsInTrees, t, _i, _len, _results;
+  rootsInTrees = (function() {
+    var _i, _len, _results;
+    _results = [];
+    for (_i = 0, _len = trees.length; _i < _len; _i++) {
+      t = trees[_i];
+      _results.push(rootWithinTree(t, leafProp, leafSig));
+    }
+    return _results;
+  })();
+  _results = [];
+  for (_i = 0, _len = rootsInTrees.length; _i < _len; _i++) {
+    roots = rootsInTrees[_i];
+    if (predicate(roots)) _results.push(f(roots));
   }
   return _results;
 };
 
 authOfC = function(comment) {
-  return ($(comment)).children(".entry").find(".noncollapsed > .tagline > .author");
+  return (($(comment)).children(".entry")).find(".noncollapsed > .tagline > .author");
 };
 
-rootWithinTree = function(root) {
-  var recur, rootAuth;
-  rootAuth = authOfC(root.leaf).html();
-  recur = function(branch, acc) {
-    var b, _i, _len, _ref;
-    if (branch == null) branch = root;
-    if (acc == null) acc = [];
-    if (authOfC(branch.leaf).html() === rootAuth) acc.push(branch.leaf);
-    if (branch.branches && branch.branches.length !== 0) {
-      _ref = branch.branches;
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        b = _ref[_i];
-        recur(b, acc);
-      }
-    }
-    return acc;
-  };
-  return recur();
+classifyOC = function(cs) {
+  return ($(authOfC(cs))).addClass("OCAuthor");
 };
 
-addClassToAuth = function(comment, classToAdd) {
-  return ($(authOfC(comment))).addClass(classToAdd);
-};
-
-mapOCAuths = function(f, predicate) {
-  var b, cByOCAuths, commentsByOCAuths, tree, _i, _len, _results;
-  tree = buildCommentTrees();
-  commentsByOCAuths = (function() {
-    var _i, _len, _results;
-    _results = [];
-    for (_i = 0, _len = tree.length; _i < _len; _i++) {
-      b = tree[_i];
-      _results.push(rootWithinTree(b));
-    }
-    return _results;
-  })();
-  _results = [];
-  for (_i = 0, _len = commentsByOCAuths.length; _i < _len; _i++) {
-    cByOCAuths = commentsByOCAuths[_i];
-    if (predicate(cByOCAuths)) _results.push(f(cByOCAuths));
-  }
-  return _results;
-};
-
-mapOCAuths((function(cs) {
-  return addClassToAuth(cs, "OCAuthor");
-}), (function(cs) {
+moreThanOne = function(cs) {
   return cs.length > 1;
-}));
+};
+
+commentProp = function(leaf) {
+  return (authOfC(leaf)).html();
+};
+
+commentSig = function(leaf) {
+  return ($(leaf)).attr("data-fullname");
+};
+
+mapRootsInTrees(classifyOC, moreThanOne, commentProp, commentSig, buildCommentTrees());
