@@ -10,7 +10,6 @@ It is written in CoffeeScript, so you want to view the CoffeeScript file, and no
 
 ### TO-DO
 
-1. Allow users to customize the CSS of original commenters.
-2. Optimize the rootWithinTree function, which often has duplicate elements in its return value.
+1. When users click 'load more comments', inspect the loaded comments and colorize as necessary.
+2. Allow users to customize the CSS of original commenters.
 3. Share with the world.
-
