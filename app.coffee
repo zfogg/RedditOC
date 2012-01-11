@@ -1,8 +1,15 @@
 # Project: RedditOC
 # Author: Zach Fogg - zach.fogg@gmail.com
 
-ORIGINAL_COMMENTS =  ".commentarea > .sitetable > .comment"
-CHILDREN_COMMENTS =  ".child > .sitetable > .comment"
+# Static jQuery strings:
+ORIGINAL_COMMENTS = ".commentarea > .sitetable > .comment"
+CHILD_COMMENTS    = ".child > .sitetable > .comment"
+COMMENT_DATA      = ".entry"
+AUTHOR_OF_ENTRY   = ".noncollapsed > .tagline > .author"
+
+# Element meta strings:
+OC_AUTHOR_CLASS     = "OCAuthor"
+UNIQUE_COMMENT_ATTR = "data-fullname"
 
 treeBuilder = (root, brancher) ->
     {
@@ -11,13 +18,10 @@ treeBuilder = (root, brancher) ->
     } # A branch's end is formed with the empty-list base-case.
 
 buildCommentTrees = ->
-    originalComments = ($ ORIGINAL_COMMENTS)
-    commentBrancher = (comment) ->
-        ($ comment).find CHILDREN_COMMENTS
-    treeBuilder oc, commentBrancher for oc in originalComments
+    treeBuilder oc, ((c) -> ($ c).find CHILD_COMMENTS) for oc in ($ ORIGINAL_COMMENTS)
 
 # An array of leaves from the tree whose leafProp match the rootProp.
-rootWithinTree = (root, leafProp, leafSig) ->
+rootInTree = (root, leafProp, leafSig) ->
     rootProp = leafProp root.leaf
     recur = (branch, acc, sigs) ->
         branchProp = leafProp branch.leaf
@@ -30,16 +34,16 @@ rootWithinTree = (root, leafProp, leafSig) ->
     recur root, [], {}
 
 mapRootsInTrees = (f, predicate, leafProp, leafSig, trees) ->
-    rootsInTrees = (rootWithinTree t, leafProp, leafSig for t in trees)
+    rootsInTrees = (rootInTree t, leafProp, leafSig for t in trees)
     f roots for roots in rootsInTrees when predicate roots
 
 authOfC = (comment) ->
-    (($ comment).children ".entry").find ".noncollapsed > .tagline > .author"
+    (($ comment).children COMMENT_DATA).find AUTHOR_OF_ENTRY
 
 # We will need a few tiny functions to describe what we want:
 
 # Map Function - Adds a CSS class to those comments that satisy the predicate.
-classifyOC = (cs) -> ($ authOfC cs).addClass "OCAuthor"
+classifyOC = (cs) -> ($ authOfC cs).addClass OC_AUTHOR_CLASS
 
 # Predicate - Comments where the original author replies in his comment thread satisfy this.
 moreThanOne = (cs) -> cs.length > 1
@@ -48,7 +52,7 @@ moreThanOne = (cs) -> cs.length > 1
 commentProp = (leaf) -> (authOfC leaf).html()
 
 # Signature - Extracts a unique piece of data from a comment.
-commentSig = (leaf) -> ($ leaf).attr "data-fullname"
+commentSig = (leaf) -> ($ leaf).attr UNIQUE_COMMENT_ATTR
 
-# Finally, color the comments of the original commenter within his comment thread.
+# Finally, put it all together:
 mapRootsInTrees classifyOC, moreThanOne, commentProp, commentSig, buildCommentTrees()
