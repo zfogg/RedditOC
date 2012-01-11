@@ -43,10 +43,10 @@ authOfC = (comment) ->
 # We will need a few tiny functions to describe what we want:
 
 # Map Function - Adds a CSS class to those comments that satisy the predicate.
-classifyOC = (cs) -> ($ authOfC cs).addClass OC_AUTHOR_CLASS
+classifyOC = (comments) -> ($ authOfC comments).addClass OC_AUTHOR_CLASS
 
 # Predicate - Comments where the original author replies in his comment thread satisfy this.
-moreThanOne = (cs) -> cs.length > 1
+moreThanOne = (comments) -> comments.length > 1
 
 # Property - Extracts the author's name from a comment.
 commentProp = (leaf) -> (authOfC leaf).html()
