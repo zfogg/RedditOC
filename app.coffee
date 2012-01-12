@@ -49,17 +49,17 @@ authOfC = (comment) ->
 # The function call that adds the a CSS class to original authors.
 filterMapRootsInTrees (
 
-    # Map Function - Adds a CSS class.
+    # Map Function - Add a CSS class.
     (comments) -> ($ authOfC comments).addClass OC_AUTHOR_CLASS),
 
-    # Predicate - Threads where the original author comments again.
+    # Predicate - Trees where the original author comments again.
     ((comments) -> comments.length > 1),
 
-    # Property - Extracts the author's name.
+    # Property - Extract the author's name.
     ((comment) -> (authOfC comment).text()),
 
-    # Signature - Extracts a unique attribute.
+    # Signature - Extract a unique attribute.
     ((comment) -> ($ comment).attr UNIQUE_COMMENT_ATTR),
 
-    # Data Tree - Branches from a comment into its child comments.
+    # Data Tree - Branch from a comment into its child comments.
     (commentTrees (c) -> ($ c).find CHILD_COMMENTS)
