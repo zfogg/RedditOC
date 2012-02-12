@@ -21,22 +21,24 @@ dataTree = (root, brancher) ->
 # unique 'signature' from each leaf with leafSig, which we use to ensure that
 # collectLeaves returns an array of unique objects, that being a set of leaves.
 filterMapRootsInTrees = (f, predicate, leafProp, leafSig, trees) ->
+    leaves = []
+    for root in trees
+        rootLeaves = findAll root, leafProp, leafSig, root
+        if predicate rootLeaves
+            leaves = leaves.concat rootLeaves
 
-    rootInTree = (root, leafProp, leafSig) ->
-        rootProp = leafProp root.leaf
-        do collectLeaves = (branch = root, acc = [], sigs = {}) ->
-            branchSig = leafSig branch.leaf
-            if not sigs[branchSig] and (leafProp branch.leaf) is rootProp
-                sigs[branchSig] = true
-                acc.push branch.leaf
-            collectLeaves b, acc, sigs for b in branch.branches
-            acc
-
-    for t in trees
-        roots = rootInTree t, leafProp, leafSig
-        f roots if predicate roots
-
+    f leaves
     null
+
+findAll = (branch, property, signature, root) ->
+    branchProp = property branch.leaf
+    do filterFold = (r = root, acc = [], sigs = {}) ->
+        rSig = signature r.leaf
+        if not sigs[rSig] and (property r.leaf) is branchProp
+            sigs[rSig] = true
+            acc.push r.leaf
+        filterFold b, acc, sigs for b in r.branches
+        acc
 
 # The array of dataTrees that are the comment trees of a Reddit comment thread.
 commentTrees = (brancher) ->
