@@ -15,5 +15,5 @@ It is written in CoffeeScript, so you want to view the CoffeeScript file, and no
 3. Share with the world.
 
 
-[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/zfogg/redditoc/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
+![RedditOC Screenshot](https://github.com/zfogg/RedditOC/raw/master/RedditOC.png)
 
